@@ -91,7 +91,7 @@ pub fn prompt_a_word(term: &mut Term, word: &[u8]) -> Result<u32> {
     Ok(i)
 }
 
-fn print_misspelt_times(term: &mut Term, i: u32) -> Result<(), anyhow::Error> {
+fn print_misspelt_times(term: &mut Term, i: u32) -> Result<()> {
     term.move_cursor_down(2)?;
     term.clear_line()?;
     term.write_fmt(format_args!("Misspelt {} time(s).", i))?;
@@ -106,13 +106,15 @@ fn wait_a_bit() {
 
 fn animated_reset(term: &mut Term, answer: &mut Answer) -> Result<()> {
     term.move_cursor_left(1)?;
+    term.hide_cursor()?;
     change_to_red(term)?;
-
+    wait_a_bit();
     while answer.pos > 0 {
         wait_a_bit();
         answer.pos -= 1;
         term_backspace(term)?;
     }
+    term.show_cursor()?;
     Ok(())
 }
 

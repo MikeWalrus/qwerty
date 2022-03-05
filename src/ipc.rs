@@ -24,7 +24,7 @@ impl Connection {
         };
         let word = con.receive_a_word()?;
         match word {
-            "start" => {
+            b"start" => {
                 con.out_socket.connect(out_socket_path)?;
                 println!("Connected.");
             }
@@ -33,12 +33,12 @@ impl Connection {
         Ok(con)
     }
 
-    pub fn receive_a_word(&mut self) -> Result<&str> {
+    pub fn receive_a_word(&mut self) -> Result<&[u8]> {
         let len = self.socket.recv(&mut self.buf)?;
-        Ok(std::str::from_utf8(&self.buf[..len])?)
+        Ok(&self.buf[0..len])
     }
 
-    pub fn send_error_times(&mut self, error_times: i32) -> Result<()> {
+    pub fn send_error_times(&mut self, error_times: u32) -> Result<()> {
         self.out_socket.send(error_times.to_string().as_bytes())?;
         Ok(())
     }
