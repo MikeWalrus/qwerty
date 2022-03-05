@@ -55,8 +55,10 @@ pub fn prompt_a_word(term: &mut Term, word: &[u8]) -> Result<u32> {
     let mut i: u32 = 0;
     'outer: loop {
         term.move_cursor_down(1)?;
+        term.clear_line()?;
         term.write_line(&"~".repeat(len))?;
         term.move_cursor_up(2)?;
+        term.clear_line()?;
         loop {
             let c = term.read_key()?;
             match c {
@@ -105,9 +107,8 @@ fn wait_a_bit() {
 }
 
 fn animated_reset(term: &mut Term, answer: &mut Answer) -> Result<()> {
-    term.move_cursor_left(1)?;
     term.hide_cursor()?;
-    change_to_red(term)?;
+    change_prev_to_red(term)?;
     wait_a_bit();
     while answer.pos > 0 {
         wait_a_bit();
@@ -118,7 +119,8 @@ fn animated_reset(term: &mut Term, answer: &mut Answer) -> Result<()> {
     Ok(())
 }
 
-fn change_to_red(term: &mut Term) -> Result<()> {
+fn change_prev_to_red(term: &mut Term) -> Result<()> {
+    term.move_cursor_left(1)?;
     term.move_cursor_down(1)?;
     term.write_fmt(format_args!("{}", style("~").red()))?;
     term.move_cursor_up(1)?;

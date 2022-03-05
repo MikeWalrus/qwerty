@@ -24,11 +24,11 @@ impl Connection {
         };
         let word = con.receive_a_word()?;
         match word {
-            b"start" => {
+            b"/start/" => {
                 con.out_socket.connect(out_socket_path)?;
                 println!("Connected.");
             }
-            _ => return Err(anyhow!("Error ")),
+            _ => return Err(anyhow!("Error while establishing connection.")),
         }
         Ok(con)
     }
