@@ -9,7 +9,7 @@ use qwerty::{
 
 fn main() -> Result<()> {
     let mut con = Connection::new()?;
-    let mut term = setup_term().context("Cannot setup your terminal.")?;
+    let mut term = setup_term().context("Cannot set up your terminal.")?;
     loop {
         let word = con.receive_a_word()?;
         match word {
@@ -17,7 +17,7 @@ fn main() -> Result<()> {
             b"/exit/" => break,
             _ => {
                 let error_times = prompt_a_word(&mut term, word)
-                    .context("An error occurred when prompting the word.")?;
+                    .context("An error occurred when prompting you to enter the word.")?;
                 con.send_error_times(error_times)?;
             }
         }

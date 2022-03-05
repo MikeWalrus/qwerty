@@ -63,6 +63,7 @@ pub fn prompt_a_word(term: &mut Term, word: &[u8]) -> Result<u32> {
             let c = term.read_key()?;
             match c {
                 Key::Enter => {
+                    show_correct_spelling(term, word)?;
                     i = 10;
                     break 'outer;
                 }
@@ -80,6 +81,7 @@ pub fn prompt_a_word(term: &mut Term, word: &[u8]) -> Result<u32> {
                             i += 1;
                             print_misspelt_times(term, i)?;
                             if i > 10 {
+                                show_correct_spelling(term, word)?;
                                 break 'outer;
                             }
                             break;
@@ -91,6 +93,12 @@ pub fn prompt_a_word(term: &mut Term, word: &[u8]) -> Result<u32> {
         }
     }
     Ok(i)
+}
+
+fn show_correct_spelling(term: &mut Term, word: &[u8]) -> Result<(), anyhow::Error> {
+    term.clear_line()?;
+    term.write_all(word)?;
+    Ok(())
 }
 
 fn print_misspelt_times(term: &mut Term, i: u32) -> Result<()> {
