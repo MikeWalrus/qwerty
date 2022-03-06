@@ -3,7 +3,6 @@ use std::{fs, os::unix::net::UnixDatagram, path::Path};
 
 pub struct Connection {
     socket: UnixDatagram,
-    out_socket: UnixDatagram,
     buf: [u8; 128],
 }
 
@@ -11,7 +10,6 @@ impl Connection {
     pub fn new() -> Result<Self> {
         let in_socket_path = Path::new("/tmp/qwerty.socket");
         let out_socket_path = Path::new("/tmp/qwerty_anki.socket");
-        let out_socket = UnixDatagram::unbound()?;
         if in_socket_path.exists() {
             fs::remove_file(in_socket_path)?
         }
@@ -19,13 +17,12 @@ impl Connection {
         let socket = UnixDatagram::bind(in_socket_path)?;
         let mut con = Self {
             socket,
-            out_socket,
             buf: [0; 128],
         };
         let word = con.receive_a_word()?;
         match word {
             b"/start/" => {
-                con.out_socket.connect(out_socket_path)?;
+                con.socket.connect(out_socket_path)?;
                 println!("Connected.");
             }
             _ => return Err(anyhow!("Error while establishing connection.")),
@@ -39,7 +36,7 @@ impl Connection {
     }
 
     pub fn send_error_times(&mut self, error_times: u32) -> Result<()> {
-        self.out_socket.send(error_times.to_string().as_bytes())?;
+        self.socket.send(error_times.to_string().as_bytes())?;
         Ok(())
     }
 }
