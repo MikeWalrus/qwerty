@@ -35,8 +35,14 @@ impl Connection {
         Ok(&self.buf[0..len])
     }
 
-    pub fn send_error_times(&mut self, error_times: u32) -> Result<()> {
+    pub fn send_error_times(&self, error_times: u32) -> Result<()> {
         self.socket.send(error_times.to_string().as_bytes())?;
+        Ok(())
+    }
+
+    pub fn send_quit_message(&self) -> Result<()> {
+        eprintln!("Telling qwerty_anki we will quit...");
+        self.socket.send("quit".as_bytes())?;
         Ok(())
     }
 }

@@ -54,42 +54,61 @@ pub fn prompt_a_word(term: &mut Term, word: &[u8]) -> Result<u32> {
     let mut answer = Answer { pos: 0, word };
     let mut i: u32 = 0;
     reset_for_new_word(&term, len)?;
-    'outer: loop {
-        loop {
-            let c = term.read_key()?;
-            match c {
-                Key::Enter => {
-                    show_correct_spelling(term, word)?;
-                    i = 10;
-                    break 'outer;
+    loop {
+        match spell_one_time(term, word, &mut answer)? {
+            Ok(_) => break,
+            Err(SpellError::Misspelt) => {
+                i += 1;
+                print_misspelt_times(term, i)?;
+                if i >= 10 {
+                    break;
                 }
-                Key::Char(c) => {
-                    term.write_fmt(format_args!("{}", c as char))?;
-                    match answer.append_char(c as u8) {
-                        Ok(_) => {
-                            change_prev_to_green(term)?;
-                            if answer.pos == len {
-                                break 'outer;
-                            }
-                        }
-                        Err(_) => {
-                            animated_reset(term, &mut answer)?;
-                            i += 1;
-                            print_misspelt_times(term, i)?;
-                            if i > 10 {
-                                show_correct_spelling(term, word)?;
-                                break 'outer;
-                            }
-                            break;
-                        }
-                    }
-                }
-                _ => {}
+            }
+            Err(SpellError::Abort) => {
+                i = 10;
+                show_correct_spelling(term, word)?;
+                break;
             }
         }
         reset_this_word(&term, len)?;
     }
     Ok(i)
+}
+
+enum SpellError {
+    Abort,
+    Misspelt,
+}
+
+fn spell_one_time(
+    term: &mut Term,
+    word: &[u8],
+    answer: &mut Answer,
+) -> Result<Result<(), SpellError>> {
+    loop {
+        let c = term.read_key()?;
+        match c {
+            Key::Enter => {
+                return Ok(Err(SpellError::Abort));
+            }
+            Key::Char(c) => {
+                term.write_fmt(format_args!("{}", c as char))?;
+                match answer.append_char(c as u8) {
+                    Ok(_) => {
+                        change_prev_to_green(term)?;
+                        if answer.pos == word.len() {
+                            return Ok(Ok(()));
+                        }
+                    }
+                    Err(_) => {
+                        animated_reset(term, answer)?;
+                        return Ok(Err(SpellError::Misspelt));
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
 }
 
 fn reset_this_word(term: &&mut Term, len: usize) -> Result<()> {

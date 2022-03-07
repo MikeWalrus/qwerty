@@ -10,15 +10,28 @@ use qwerty::{
 fn main() -> Result<()> {
     let mut con = Connection::new()?;
     let mut term = setup_term().context("Cannot set up your terminal.")?;
+    ctrlc::set_handler(|| eprintln!("Ctrl-C received."))?;
     loop {
         let word = con.receive_a_word()?;
         match word {
             b"/start/" => {}
             b"/exit/" => break,
             _ => {
-                let error_times = prompt_a_word(&mut term, word)
-                    .context("An error occurred when prompting you to enter the word.")?;
-                con.send_error_times(error_times)?;
+                match prompt_a_word(&mut term, word) {
+                    Ok(i) => {
+                        con.send_error_times(i)?;
+                    }
+                    Err(e) => {
+                        if let Some(e) = e.downcast_ref::<std::io::Error>() {
+                            if matches!(e.kind(), std::io::ErrorKind::Interrupted) {
+                                con.send_quit_message()?;
+                                break;
+                            }
+                        }
+                        return Err(e)
+                            .context("An error occurred when prompting you to enter the word.");
+                    }
+                };
             }
         }
     }
