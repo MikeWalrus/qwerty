@@ -53,12 +53,8 @@ pub fn prompt_a_word(term: &mut Term, word: &[u8]) -> Result<u32> {
     let len = word.len();
     let mut answer = Answer { pos: 0, word };
     let mut i: u32 = 0;
+    reset_for_new_word(&term, len)?;
     'outer: loop {
-        term.move_cursor_down(1)?;
-        term.clear_line()?;
-        term.write_line(&"~".repeat(len))?;
-        term.move_cursor_up(2)?;
-        term.clear_line()?;
         loop {
             let c = term.read_key()?;
             match c {
@@ -91,8 +87,28 @@ pub fn prompt_a_word(term: &mut Term, word: &[u8]) -> Result<u32> {
                 _ => {}
             }
         }
+        reset_this_word(&term, len)?;
     }
     Ok(i)
+}
+
+fn reset_this_word(term: &&mut Term, len: usize) -> Result<()> {
+    term.move_cursor_down(1)?;
+    term.clear_line()?;
+    term.write_line(&"~".repeat(len))?;
+    term.move_cursor_up(2)?;
+    term.clear_line()?;
+    Ok(())
+}
+
+fn reset_for_new_word(term: &&mut Term, len: usize) -> Result<()> {
+    term.move_cursor_down(1)?;
+    term.clear_line()?;
+    term.write_line(&"~".repeat(len))?;
+    term.clear_line()?;
+    term.move_cursor_up(2)?;
+    term.clear_line()?;
+    Ok(())
 }
 
 fn show_correct_spelling(term: &mut Term, word: &[u8]) -> Result<()> {
