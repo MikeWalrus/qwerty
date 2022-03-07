@@ -95,9 +95,11 @@ pub fn prompt_a_word(term: &mut Term, word: &[u8]) -> Result<u32> {
     Ok(i)
 }
 
-fn show_correct_spelling(term: &mut Term, word: &[u8]) -> Result<(), anyhow::Error> {
+fn show_correct_spelling(term: &mut Term, word: &[u8]) -> Result<()> {
     term.clear_line()?;
-    term.write_all(word)?;
+    term.write_fmt(format_args!("{}", style(std::str::from_utf8(word)?).red()))?;
+    term.write_fmt(format_args!("\t{}", style("Press any key.").blue()))?;
+    term.read_key()?;
     Ok(())
 }
 
@@ -110,8 +112,12 @@ fn print_misspelt_times(term: &mut Term, i: u32) -> Result<()> {
     Ok(())
 }
 
+fn wait_ms(ms: u64) {
+    std::thread::sleep(std::time::Duration::from_millis(ms));
+}
+
 fn wait_a_bit() {
-    std::thread::sleep(std::time::Duration::from_millis(100));
+    wait_ms(100);
 }
 
 fn animated_reset(term: &mut Term, answer: &mut Answer) -> Result<()> {
